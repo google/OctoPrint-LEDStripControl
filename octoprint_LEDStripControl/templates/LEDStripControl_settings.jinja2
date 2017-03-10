@@ -1,0 +1,27 @@
+<h3>{{ _('LED Strip Configuration') }}</h3>
+
+<form class="form-horizontal">
+    <div class="control-group">
+        <label class="control-label">Red GPIO Pin</label>
+        <div class="controls">
+            <input type="number" class="input-mini" data-bind="value: settings.plugins.LEDStripControl.r">
+        </div>
+    </div>
+    <br />
+
+    <div class="control-group">
+        <label class="control-label">Green GPIO Pin</label>
+        <div class="controls">
+            <input type="number" class="input-mini" data-bind="value: settings.plugins.LEDStripControl.g">
+        </div>
+    </div>
+    <br />
+
+    <div class="control-group">
+        <label class="control-label">Blue GPIO Pin</label>
+        <div class="controls">
+            <input type="number" class="input-mini" data-bind="value: settings.plugins.LEDStripControl.b">
+        </div>
+    </div>
+    <br />
+</form>

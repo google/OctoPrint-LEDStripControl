@@ -25,6 +25,8 @@ or manually using this URL:
 
 ## Configuration
 
+**NOTE: GPIO pins should be specified as phsyical number and not BCM number.**
+
 Configure the GPIO pins via the OctoPrint settings UI.
 
 ## Disclaimer

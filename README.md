@@ -19,7 +19,7 @@ Implements the M150 command syntax from the latest Marlin.
 1. Install via the bundled [Plugin Manager](https://github.com/foosel/OctoPrint/wiki/Plugin:-Plugin-Manager)
 or manually using this URL:
 
-    	https://github.com/google/OctoPrint-LED-Strip-Control/archive/master.zip
+    	https://github.com/google/OctoPrint-LEDStripControl/archive/master.zip
 
 1. Restart OctoPrint
 

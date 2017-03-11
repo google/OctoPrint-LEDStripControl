@@ -1,4 +1,4 @@
-# OctoPrint-LEStripControl
+# OctoPrint-LEDStripControl
 
 OctoPrint Plugin that intercepts M150 GCode commands and controls local GPIOs accordingly.
 

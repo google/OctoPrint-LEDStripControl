@@ -14,7 +14,7 @@ Implements the M150 command syntax from the latest Marlin.
 
 1. Make sure that the OctoPrint user is in the gpio group via the following command.
 
-    	usermod -G gpio pi
+    	usermod -a -G gpio pi
 
 1. Install via the bundled [Plugin Manager](https://github.com/foosel/OctoPrint/wiki/Plugin:-Plugin-Manager)
 or manually using this URL:

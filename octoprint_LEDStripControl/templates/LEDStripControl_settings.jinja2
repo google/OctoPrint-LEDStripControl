@@ -1,8 +1,12 @@
-<h3>{{ _('LED Strip Configuration') }}</h3>
+<h4>{{ _('LED Strip Configuration') }}</h4>
+
+<br />
+<p>GPIO pins should be specified as <a href="http://elinux.org/RPi_Low-level_peripherals#General_Purpose_Input.2FOutput_.28GPIO.29">physical pin numbers</a>, not GPIO/BCM numbers.</p>
+<br />
 
 <form class="form-horizontal">
     <div class="control-group">
-        <label class="control-label">Red GPIO Pin</label>
+        <label class="control-label">Red Pin Number</label>
         <div class="controls">
             <input type="number" class="input-mini" data-bind="value: settings.plugins.LEDStripControl.r">
         </div>
@@ -10,7 +14,7 @@
     <br />
 
     <div class="control-group">
-        <label class="control-label">Green GPIO Pin</label>
+        <label class="control-label">Green Pin Number</label>
         <div class="controls">
             <input type="number" class="input-mini" data-bind="value: settings.plugins.LEDStripControl.g">
         </div>
@@ -18,7 +22,7 @@
     <br />
 
     <div class="control-group">
-        <label class="control-label">Blue GPIO Pin</label>
+        <label class="control-label">Blue Pin Number</label>
         <div class="controls">
             <input type="number" class="input-mini" data-bind="value: settings.plugins.LEDStripControl.b">
         </div>

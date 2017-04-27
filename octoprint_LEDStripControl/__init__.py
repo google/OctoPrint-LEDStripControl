@@ -143,6 +143,9 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 	def on_settings_save(self, data):
 		self._logger.debug(u"LEDStripControl on_settings_save()")
 		self._unregister_leds()
+		# cast to proper types before saving
+		for k in ('r', 'g', 'b'):
+			if data.get(k): data[k] = max(0, int(data[k]))
 		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 		self._register_leds()
 

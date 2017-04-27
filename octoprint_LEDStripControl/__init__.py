@@ -16,41 +16,46 @@
 # coding=utf-8
 
 from __future__ import absolute_import
-import os.path
 import re
 
 import octoprint.plugin
+import pigpio
 try:
 	import RPi.GPIO as GPIO
 except (ImportError, RuntimeError):
 	GPIO = None
 
-class PiBlasterPin(object):
-	def __init__(self, pin, logger):
-		self._dev = "/dev/pi-blaster"
-		self._logger = logger
-		self._pin = pin
+phy_to_bcm= { 0:None, 1:None, 2:None, 3:2, 4:None, 5:3, 6:None, 7:4, 8:14,
+			 9:None, 10:15, 11:17, 12:18, 13:27, 14:None, 15:22, 16:23,
+			 17:None, 18:24, 19:10, 20:None, 21:9, 22:25, 23:11, 24:8, 25:None,
+			 26:7, 27:0, 28:1, 29:5, 30:None, 31:6, 32:12, 33:13, 34:None,
+			 35:19, 36:16, 37:26, 38:20, 39:None, 40:21 }
+
+class PiGPIOpin(object):
+	def __init__(self, pigpiod, pin):
+		self._pigpiod = pigpiod
+
+		# attempt to convert the physical pin to a bcm pin
+		# how is this not in a library already?
+		if type(phy_to_bcm[pin]) is int:
+			self._pin = phy_to_bcm[pin]
+		else:
+			self._pin = pin
+
 		self._dutycycle = 0
 
-	def _write_to_dev(self, cmd):
-		if not os.path.exists(self._dev):
-			raise Exception("%s does not exist" % self._dev)
-		if not os.access(self._dev, os.W_OK):
-			raise Exception("%s is not writable" % self._dev)
-
-		self._logger.debug("PiBlasterPin:_write_to_dev(%s)" % cmd)
-		with open(self._dev, "w") as pb:
-			pb.write(cmd + "\n")
+	def _convert_physical_to_bcm(self, pin):
+		"""convert a physical pin to a bcm pin"""
+		pass
 
 	def start(self, dutycycle):
 		self._dutycycle = dutycycle
-		# munge the output for pi-blaster
-		dc = "%0.2f" % (self._dutycycle / 100.0)
-		dc = dc.rstrip("0").rstrip(".")
-		self._write_to_dev("%s=%s" % (self._pin, dc))
+		if self._pigpiod.connected:
+			self._pigpiod.set_PWM_dutycycle(self._pin, dutycycle)
 
 	def stop(self):
-		self._write_to_dev("%s=0" % self._pin)
+		if self._pigpiod.connected:
+			self._pigpiod.set_PWM_dutycycle(self._pin, 0)
 
 	def ChangeDutyCycle(self, dutycycle):
 		self.start(dutycycle)
@@ -63,14 +68,15 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 
 	def __init__(self):
 		self._leds = dict(r=None, g=None, b=None)
+		self._pigpiod = None
 
 	def _setup_pin(self, pin):
 		self._logger.debug(u"_setup_pin(%s)" % (pin,))
 		if pin:
 			p = None
 
-			if self._settings.get_boolean(['piblaster']):
-				p = PiBlasterPin(pin, self._logger)
+			if self._settings.get_boolean(['pigpiod']):
+				p = PiGPIOpin(self._pigpiod, pin)
 			else:
 				GPIO.setwarnings(False)
 				GPIO.setmode(GPIO.BOARD)
@@ -87,7 +93,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 				self._leds[i].ChangeDutyCycle(0)
 				self._leds[i].stop()
 
-		if not self._settings.get_boolean(['piblaster']) and GPIO:
+		if not self._settings.get_boolean(['pigpiod']) and GPIO:
 			GPIO.cleanup()
 		self._leds = dict(r=None, g=None, b=None)
 
@@ -106,6 +112,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 	def on_shutdown(self):
 		self._logger.debug(u"LEDStripControl Shutdown")
 		self._unregister_leds()
+		self._pigpiod.stop()
 
 	def HandleM150(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
 		if gcode and cmd.startswith("M150"):
@@ -141,10 +148,15 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 		]
 
 	def get_settings_defaults(self):
-		return dict(r=0, g=0, b=0, piblaster=False)
+		return dict(r=0, g=0, b=0, pigpiod=False)
 
 	def on_settings_initialized(self):
 		self._logger.debug(u"LEDStripControl on_settings_load()")
+
+		if self._settings.get_boolean(['pigpiod']) and self._pigpiod is None:
+			self._pigpiod = pigpio.pi()
+			if not self._pigpiod.connected:
+				self._logger.error(u"Unable to communicate with PiGPIOd")
 		self._register_leds()
 
 	def on_settings_save(self, data):

@@ -20,11 +20,15 @@ import os.path
 import re
 
 import octoprint.plugin
-import RPi.GPIO as GPIO
+try:
+	import RPi.GPIO as GPIO
+except (ImportError, RuntimeError):
+	GPIO = None
 
 class PiBlasterPin(object):
-	def __init__(self, pin):
+	def __init__(self, pin, logger):
 		self._dev = "/dev/pi-blaster"
+		self._logger = logger
 		self._pin = pin
 		self._dutycycle = 0
 
@@ -33,13 +37,15 @@ class PiBlasterPin(object):
 			raise Exception("%s does not exist" % self._dev)
 		if not os.access(self._dev, os.W_OK):
 			raise Exception("%s is not writable" % self._dev)
+
+		self._logger.debug("PiBlasterPin:_write_to_dev(%s)" % cmd)
 		with open(self._dev, "w") as pb:
 			pb.write(cmd + "\n")
 
 	def start(self, dutycycle):
 		self._dutycycle = dutycycle
 		# munge the output for pi-blaster
-		dc = "%0.1f" % (self._dutycycle / 100.0)
+		dc = "%0.2f" % (self._dutycycle / 100.0)
 		dc = dc.rstrip("0").rstrip(".")
 		self._write_to_dev("%s=%s" % (self._pin, dc))
 
@@ -64,7 +70,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 			p = None
 
 			if self._settings.get_boolean(['piblaster']):
-				p = PiBlasterPin(pin)
+				p = PiBlasterPin(pin, self._logger)
 			else:
 				GPIO.setwarnings(False)
 				GPIO.setmode(GPIO.BOARD)
@@ -81,7 +87,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 				self._leds[i].ChangeDutyCycle(0)
 				self._leds[i].stop()
 
-		if not self._settings.get_boolean(['piblaster']):
+		if not self._settings.get_boolean(['piblaster']) and GPIO:
 			GPIO.cleanup()
 		self._leds = dict(r=None, g=None, b=None)
 
@@ -94,7 +100,8 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 
 	def on_after_startup(self):
 		self._logger.debug(u"LEDStripControl Startup")
-		self._logger.debug(u"RPi.GPIO version %s" % (GPIO.VERSION,))
+		if GPIO:
+			self._logger.debug(u"RPi.GPIO version %s" % (GPIO.VERSION,))
 
 	def on_shutdown(self):
 		self._logger.debug(u"LEDStripControl Shutdown")

@@ -16,16 +16,44 @@
 # coding=utf-8
 
 from __future__ import absolute_import
+import os.path
 import re
 
 import octoprint.plugin
 import RPi.GPIO as GPIO
 
+class PiBlasterPin(object):
+	def __init__(self, pin, dutycycle):
+		self._dev = "/dev/pi-blaster"
+		self._pin = pin
+		self._dutycycle = dutycycle
+
+	def _write_to_dev(self, cmd):
+		if not os.path.exists(self._dev):
+			raise Exception("%s does not exist" % self._dev)
+		if not os.access(self._dev, os.W_OK):
+			raise Exception("%s is not writable" % self._dev)
+		with open(self._dev, "w") as pb:
+			pb.write(cmd + "\n")
+
+	def start(self, dutycycle):
+		self._dutycycle = dutycycle
+		# munge the output for pi-blaster
+		dc = "%0.1f" % (self._dutycycle / 100.0)
+		dc = dc.rstrip("0").rstrip(".")
+		self._write_to_dev("%s=%s" % (self._pin, dc))
+
+	def stop(self):
+		self._write_to_dev("%s=0" % self._pin)
+
+	def ChangeDutyCycle(self, dutycycle):
+		self.start(dutycycle)
+
 class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
-                            octoprint.plugin.SettingsPlugin,
-                            octoprint.plugin.ShutdownPlugin,
-                            octoprint.plugin.StartupPlugin,
-                            octoprint.plugin.TemplatePlugin):
+							octoprint.plugin.SettingsPlugin,
+							octoprint.plugin.ShutdownPlugin,
+							octoprint.plugin.StartupPlugin,
+							octoprint.plugin.TemplatePlugin):
 
 	def __init__(self):
 		self._leds = dict(r=None, g=None, b=None)
@@ -34,11 +62,15 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 		self._logger.debug(u"_setup_pin(%s)" % (pin,))
 		if pin:
 			p = None
-			GPIO.setwarnings(False)
-			GPIO.setmode(GPIO.BOARD)
-			GPIO.setup(pin, GPIO.OUT)
-			GPIO.output(pin, GPIO.HIGH)
-			p = GPIO.PWM(pin, 100)
+
+			if self._settings.get_boolean(['piblaster']):
+				p = PiBlasterPin(pin, 100)
+			else:
+				GPIO.setwarnings(False)
+				GPIO.setmode(GPIO.BOARD)
+				GPIO.setup(pin, GPIO.OUT)
+				GPIO.output(pin, GPIO.HIGH)
+				p = GPIO.PWM(pin, 100)
 			p.start(100)
 			return p
 
@@ -48,19 +80,17 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 			if self._leds[i]:
 				self._leds[i].ChangeDutyCycle(0)
 				self._leds[i].stop()
-				
-		GPIO.cleanup()
+
+		if not self._settings.get_boolean(['piblaster']):
+			GPIO.cleanup()
 		self._leds = dict(r=None, g=None, b=None)
 
 	def _register_leds(self):
 		self._logger.debug(u"_register_leds()")
 		for i in ('r', 'g', 'b'):
-			try:
-				pin = self._settings.get_int([i])
-				self._logger.debug(u"got pin(%s)" % (pin,))
-				self._leds[i] = self._setup_pin(pin)
-			except(AttributeError, ValueError) as e:
-				self._logger.error(e)
+			pin = self._settings.get_int([i])
+			self._logger.debug(u"got pin(%s)" % (pin,))
+			self._leds[i] = self._setup_pin(pin)
 
 	def on_after_startup(self):
 		self._logger.debug(u"LEDStripControl Startup")
@@ -74,7 +104,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 		if gcode and cmd.startswith("M150"):
 			self._logger.debug(u"M150 Detected: %s" % (cmd,))
 			# Emulating Marlin 1.1.0's syntax
-                        # https://github.com/MarlinFirmware/Marlin/blob/RC/Marlin/Marlin_main.cpp#L6133
+			# https://github.com/MarlinFirmware/Marlin/blob/RC/Marlin/Marlin_main.cpp#L6133
 			dutycycles = {'r':0.0, 'g':0.0, 'b':0.0}
 			for match in re.finditer(r'([RGUBrgub]) *(\d*)', cmd):
 				k = match.group(1).lower()
@@ -89,9 +119,10 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 				v = max(min(v, 100.0), 0.0) # clamp the value
 				dutycycles[k] = v
 				self._logger.debug(u"match 1: %s 2: %s" % (k, v))
+
 			for l in dutycycles.keys():
 				self._leds[l].ChangeDutyCycle(dutycycles[l])
-				
+
 	##~~ SettingsPlugin mixin
 
 	def get_settings_version(self):
@@ -103,7 +134,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 		]
 
 	def get_settings_defaults(self):
-		return dict(r=None, g=None, b=None)
+		return dict(r=0, g=0, b=0, piblaster=False)
 
 	def on_settings_initialized(self):
 		self._logger.debug(u"LEDStripControl on_settings_load()")
@@ -114,7 +145,6 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 		self._unregister_leds()
 		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 		self._register_leds()
-
 
 	##~~ Softwareupdate hook
 

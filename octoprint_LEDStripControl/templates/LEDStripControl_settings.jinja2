@@ -8,24 +8,28 @@
     <div class="control-group">
         <label class="control-label">Red Pin Number</label>
         <div class="controls">
-            <input type="number" class="input-mini" data-bind="value: settings.plugins.LEDStripControl.r">
+            <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: settings.plugins.LEDStripControl.r">
         </div>
     </div>
-    <br />
 
     <div class="control-group">
         <label class="control-label">Green Pin Number</label>
         <div class="controls">
-            <input type="number" class="input-mini" data-bind="value: settings.plugins.LEDStripControl.g">
+            <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: settings.plugins.LEDStripControl.g">
         </div>
     </div>
-    <br />
 
     <div class="control-group">
         <label class="control-label">Blue Pin Number</label>
         <div class="controls">
-            <input type="number" class="input-mini" data-bind="value: settings.plugins.LEDStripControl.b">
+            <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: settings.plugins.LEDStripControl.b">
         </div>
     </div>
-    <br />
+
+    <div class="control-group">
+        <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settings.plugins.LEDStripControl.piblaster">Use <a href="https://github.com/sarfata/pi-blaster">Pi-Blaster</a>
+            <span class="help-inline">If unchecked use RPi.GPIO.  Pi-Blaster should give smoother PWM frequencies but requires a more involved setup.</span>
+        </label>
+    </div>
 </form>

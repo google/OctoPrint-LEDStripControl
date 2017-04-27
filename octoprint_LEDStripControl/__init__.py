@@ -23,10 +23,10 @@ import octoprint.plugin
 import RPi.GPIO as GPIO
 
 class PiBlasterPin(object):
-	def __init__(self, pin, dutycycle):
+	def __init__(self, pin):
 		self._dev = "/dev/pi-blaster"
 		self._pin = pin
-		self._dutycycle = dutycycle
+		self._dutycycle = 0
 
 	def _write_to_dev(self, cmd):
 		if not os.path.exists(self._dev):
@@ -64,7 +64,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 			p = None
 
 			if self._settings.get_boolean(['piblaster']):
-				p = PiBlasterPin(pin, 100)
+				p = PiBlasterPin(pin)
 			else:
 				GPIO.setwarnings(False)
 				GPIO.setmode(GPIO.BOARD)

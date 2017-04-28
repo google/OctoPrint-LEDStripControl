@@ -32,8 +32,9 @@ phy_to_bcm= { 0:None, 1:None, 2:None, 3:2, 4:None, 5:3, 6:None, 7:4, 8:14,
 			 35:19, 36:16, 37:26, 38:20, 39:None, 40:21 }
 
 class PiGPIOpin(object):
-	def __init__(self, pigpiod, pin):
+	def __init__(self, pigpiod, pin, logger):
 		self._pigpiod = pigpiod
+		self._logger = logger
 
 		# attempt to convert the physical pin to a bcm pin
 		# how is this not in a library already?
@@ -41,23 +42,23 @@ class PiGPIOpin(object):
 			self._pin = phy_to_bcm[pin]
 		else:
 			self._pin = pin
+		self._logger.debug(u"PiGPIOpin: coverted pin: %s to %s" % (pin, self._pin))
 
 		self._dutycycle = 0
 
-	def _convert_physical_to_bcm(self, pin):
-		"""convert a physical pin to a bcm pin"""
-		pass
-
 	def start(self, dutycycle):
 		self._dutycycle = dutycycle
+		self._logger.debug(u"PiGPIOpin: start()")
 		if self._pigpiod.connected:
 			self._pigpiod.set_PWM_dutycycle(self._pin, dutycycle)
 
 	def stop(self):
+		self._logger.debug(u"PiGPIOpin: stop()")
 		if self._pigpiod.connected:
 			self._pigpiod.set_PWM_dutycycle(self._pin, 0)
 
 	def ChangeDutyCycle(self, dutycycle):
+		self._logger.debug(u"PiGPIOpin: ChangeDutyCycle()")
 		self.start(dutycycle)
 
 class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
@@ -75,8 +76,14 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 		if pin:
 			p = None
 
+			if self._pigpiod is None:
+				self._pigpiod = pigpio.pi()
+
 			if self._settings.get_boolean(['pigpiod']):
-				p = PiGPIOpin(self._pigpiod, pin)
+				if not self._pigpiod.connected:
+					self._logger.error(u"Unable to communicate with PiGPIOd")
+				else:
+					p = PiGPIOpin(self._pigpiod, pin, self._logger)
 			else:
 				GPIO.setwarnings(False)
 				GPIO.setmode(GPIO.BOARD)
@@ -153,10 +160,6 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 	def on_settings_initialized(self):
 		self._logger.debug(u"LEDStripControl on_settings_load()")
 
-		if self._settings.get_boolean(['pigpiod']) and self._pigpiod is None:
-			self._pigpiod = pigpio.pi()
-			if not self._pigpiod.connected:
-				self._logger.error(u"Unable to communicate with PiGPIOd")
 		self._register_leds()
 
 	def on_settings_save(self, data):

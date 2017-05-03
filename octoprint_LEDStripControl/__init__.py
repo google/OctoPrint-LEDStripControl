@@ -23,13 +23,14 @@ import pigpio
 try:
 	import RPi.GPIO as GPIO
 except (ImportError, RuntimeError):
+	# RuntimeError gets thrown when you import RPi.GPIO on a non Raspberry Pi
 	GPIO = None
 
-phy_to_bcm= { 0:None, 1:None, 2:None, 3:2, 4:None, 5:3, 6:None, 7:4, 8:14,
-			 9:None, 10:15, 11:17, 12:18, 13:27, 14:None, 15:22, 16:23,
-			 17:None, 18:24, 19:10, 20:None, 21:9, 22:25, 23:11, 24:8, 25:None,
-			 26:7, 27:0, 28:1, 29:5, 30:None, 31:6, 32:12, 33:13, 34:None,
-			 35:19, 36:16, 37:26, 38:20, 39:None, 40:21 }
+phy_to_bcm = { 0:None, 1:None, 2:None, 3:2, 4:None, 5:3, 6:None, 7:4, 8:14,
+			  9:None, 10:15, 11:17, 12:18, 13:27, 14:None, 15:22, 16:23,
+			  17:None, 18:24, 19:10, 20:None, 21:9, 22:25, 23:11, 24:8, 25:None,
+			  26:7, 27:0, 28:1, 29:5, 30:None, 31:6, 32:12, 33:13, 34:None,
+			  35:19, 36:16, 37:26, 38:20, 39:None, 40:21 }
 
 class PiGPIOpin(object):
 	def __init__(self, pigpiod, pin, logger):
@@ -38,27 +39,27 @@ class PiGPIOpin(object):
 
 		# attempt to convert the physical pin to a bcm pin
 		# how is this not in a library already?
-		if type(phy_to_bcm[pin]) is int:
+		if phy_to_bcm.get(pin) is not None:
 			self._pin = phy_to_bcm[pin]
 		else:
 			self._pin = pin
-		self._logger.debug(u"PiGPIOpin: coverted pin: %s to %s" % (pin, self._pin))
+		self._logger.debug(u"PiGPIOpin: coverted pin: %r to %r" % (pin, self._pin))
 
 		self._dutycycle = 0
 
 	def start(self, dutycycle):
 		self._dutycycle = dutycycle
-		self._logger.debug(u"PiGPIOpin: start()")
+		self._logger.debug(u"PiGPIOpin: start() pin: %s" % self._pin)
 		if self._pigpiod.connected:
 			self._pigpiod.set_PWM_dutycycle(self._pin, dutycycle)
 
 	def stop(self):
-		self._logger.debug(u"PiGPIOpin: stop()")
+		self._logger.debug(u"PiGPIOpin: stop() pin: %s" % self._pin)
 		if self._pigpiod.connected:
 			self._pigpiod.set_PWM_dutycycle(self._pin, 0)
 
 	def ChangeDutyCycle(self, dutycycle):
-		self._logger.debug(u"PiGPIOpin: ChangeDutyCycle()")
+		self._logger.debug(u"PiGPIOpin: ChangeDutyCycle() pin: %s" % self._pin)
 		self.start(dutycycle)
 
 class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,

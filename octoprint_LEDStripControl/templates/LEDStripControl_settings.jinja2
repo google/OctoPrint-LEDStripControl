@@ -1,31 +1,35 @@
 <h4>{{ _('LED Strip Configuration') }}</h4>
 
 <br />
-<p>GPIO pins should be specified as <a href="http://elinux.org/RPi_Low-level_peripherals#General_Purpose_Input.2FOutput_.28GPIO.29">physical pin numbers</a>, not GPIO/BCM numbers.</p>
+<p>GPIO pins should be specified as <a href="http://pinout.xyz">physical pin numbers</a>, not GPIO/BCM numbers.</p>
 <br />
 
 <form class="form-horizontal">
     <div class="control-group">
         <label class="control-label">Red Pin Number</label>
         <div class="controls">
-            <input type="number" class="input-mini" data-bind="value: settings.plugins.LEDStripControl.r">
+            <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: settings.plugins.LEDStripControl.r">
         </div>
     </div>
-    <br />
 
     <div class="control-group">
         <label class="control-label">Green Pin Number</label>
         <div class="controls">
-            <input type="number" class="input-mini" data-bind="value: settings.plugins.LEDStripControl.g">
+            <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: settings.plugins.LEDStripControl.g">
         </div>
     </div>
-    <br />
 
     <div class="control-group">
         <label class="control-label">Blue Pin Number</label>
         <div class="controls">
-            <input type="number" class="input-mini" data-bind="value: settings.plugins.LEDStripControl.b">
+            <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: settings.plugins.LEDStripControl.b">
         </div>
     </div>
-    <br />
+
+    <div class="control-group">
+        <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settings.plugins.LEDStripControl.pigpiod">Use <a href="http://abyz.co.uk/rpi/pigpio/pigpiod.html">pigpiod</a>
+            <span class="help-inline">If unchecked use RPi.GPIO.  PiGPIOd should give smoother PWM frequencies but requires a more involved setup. Please see the <a href="http://abyz.co.uk/rpi/pigpio/pigpiod.html">documentation</a> for details.</span>
+        </label>
+    </div>
 </form>

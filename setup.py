@@ -18,13 +18,13 @@
 plugin_identifier = "LEDStripControl"
 plugin_package = "octoprint_LEDStripControl"
 plugin_name = "OctoPrint-LEDStripControl"
-plugin_version = "0.1.1"
+plugin_version = "0.2.0"
 plugin_description = """OctoPrint plugin for controling RGB LED Strips via local GPIO pins"""
 plugin_author = "Uriah Welcome"
 plugin_author_email = "uriah@google.com"
 plugin_url = "https://github.com/google/OctoPrint-LEDStripControl"
 plugin_license = "Apache"
-plugin_requires = ["RPi.GPIO"]
+plugin_requires = ["RPi.GPIO", "pigpio"]
 
 plugin_additional_data = []
 plugin_additional_packages = []

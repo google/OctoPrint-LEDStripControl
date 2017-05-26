@@ -69,7 +69,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 							octoprint.plugin.TemplatePlugin):
 
 	def __init__(self):
-		self._leds = dict(r=None, g=None, b=None)
+		self._leds = dict(r=None, g=None, b=None, w=None)
 		self._pigpiod = None
 
 	def _setup_pin(self, pin):
@@ -96,7 +96,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 
 	def _unregister_leds(self):
 		self._logger.debug(u"_unregister_leds()")
-		for i in ('r', 'g', 'b'):
+		for i in ('r', 'g', 'b', 'w'):
 			if self._leds[i]:
 				self._leds[i].ChangeDutyCycle(0)
 				self._leds[i].stop()
@@ -107,7 +107,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 
 	def _register_leds(self):
 		self._logger.debug(u"_register_leds()")
-		for i in ('r', 'g', 'b'):
+		for i in ('r', 'g', 'b', 'w'):
 			pin = self._settings.get_int([i])
 			self._logger.debug(u"got pin(%s)" % (pin,))
 			self._leds[i] = self._setup_pin(pin)
@@ -127,8 +127,8 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 			self._logger.debug(u"M150 Detected: %s" % (cmd,))
 			# Emulating Marlin 1.1.0's syntax
 			# https://github.com/MarlinFirmware/Marlin/blob/RC/Marlin/Marlin_main.cpp#L6133
-			dutycycles = {'r':0.0, 'g':0.0, 'b':0.0}
-			for match in re.finditer(r'([RGUBrgub]) *(\d*)', cmd):
+			dutycycles = {'r':0.0, 'g':0.0, 'b':0.0, 'w':0.0}
+			for match in re.finditer(r'([RGUBWrgubw]) *(\d*)', cmd):
 				k = match.group(1).lower()
 				# Marlin uses RUB instead of RGB
 				if k == 'u': k = 'g'
@@ -143,7 +143,8 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 				self._logger.debug(u"match 1: %s 2: %s" % (k, v))
 
 			for l in dutycycles.keys():
-				self._leds[l].ChangeDutyCycle(dutycycles[l])
+				if self._leds[l]:
+					self._leds[l].ChangeDutyCycle(dutycycles[l])
 
 	##~~ SettingsPlugin mixin
 
@@ -156,7 +157,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 		]
 
 	def get_settings_defaults(self):
-		return dict(r=0, g=0, b=0, pigpiod=False)
+		return dict(r=0, g=0, b=0, w=0, pigpiod=False)
 
 	def on_settings_initialized(self):
 		self._logger.debug(u"LEDStripControl on_settings_load()")
@@ -167,7 +168,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 		self._logger.debug(u"LEDStripControl on_settings_save()")
 		self._unregister_leds()
 		# cast to proper types before saving
-		for k in ('r', 'g', 'b'):
+		for k in ('r', 'g', 'b', 'w'):
 			if data.get(k): data[k] = max(0, int(data[k]))
 		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 		self._register_leds()

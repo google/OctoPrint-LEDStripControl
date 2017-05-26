@@ -1,8 +1,5 @@
-<h4>{{ _('LED Strip Configuration') }}</h4>
-
-<br />
+<h4>GPIO Configuration</h4>
 <p>GPIO pins should be specified as <a href="http://pinout.xyz">physical pin numbers</a>, not GPIO/BCM numbers.</p>
-<br />
 
 <form class="form-horizontal">
     <div class="control-group">
@@ -23,6 +20,13 @@
         <label class="control-label">Blue Pin Number</label>
         <div class="controls">
             <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: settings.plugins.LEDStripControl.b">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">White Pin Number (Optional)</label>
+        <div class="controls">
+            <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: settings.plugins.LEDStripControl.w">
         </div>
     </div>
 

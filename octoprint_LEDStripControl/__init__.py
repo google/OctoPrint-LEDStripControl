@@ -145,6 +145,8 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 			for l in dutycycles.keys():
 				self._leds[l].ChangeDutyCycle(dutycycles[l])
 
+			return None,
+
 	##~~ SettingsPlugin mixin
 
 	def get_settings_version(self):

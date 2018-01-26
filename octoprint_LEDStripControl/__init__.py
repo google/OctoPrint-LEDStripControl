@@ -89,7 +89,10 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 				GPIO.setwarnings(False)
 				GPIO.setmode(GPIO.BOARD)
 				GPIO.setup(pin, GPIO.OUT)
-				GPIO.output(pin, GPIO.HIGH)
+				if self._settings.get_boolean(['on_startup']):
+					GPIO.output(pin, GPIO.HIGH)
+				else:
+					GPIO.output(pin, GPIO.LOW)
 				p = GPIO.PWM(pin, 100)
 			p.start(100)
 			return p
@@ -146,6 +149,8 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 				if self._leds[l]:
 					self._leds[l].ChangeDutyCycle(dutycycles[l])
 
+			return None,
+
 	##~~ SettingsPlugin mixin
 
 	def get_settings_version(self):
@@ -157,7 +162,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 		]
 
 	def get_settings_defaults(self):
-		return dict(r=0, g=0, b=0, w=0, pigpiod=False)
+		return dict(r=0, g=0, b=0, w=0, pigpiod=False, on_startup=True)
 
 	def on_settings_initialized(self):
 		self._logger.debug(u"LEDStripControl on_settings_load()")

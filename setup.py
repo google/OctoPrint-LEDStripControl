@@ -24,7 +24,7 @@ plugin_author = "Uriah Welcome"
 plugin_author_email = "uriah@google.com"
 plugin_url = "https://github.com/google/OctoPrint-LEDStripControl"
 plugin_license = "Apache"
-plugin_requires = ["RPi.GPIO", "pigpio"]
+plugin_requires = ["RPi.GPIO", "pigpio==1.35"]
 
 plugin_additional_data = []
 plugin_additional_packages = []

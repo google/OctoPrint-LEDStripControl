@@ -151,6 +151,8 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 
 			return None,
 
+			return None,
+
 	##~~ SettingsPlugin mixin
 
 	def get_settings_version(self):

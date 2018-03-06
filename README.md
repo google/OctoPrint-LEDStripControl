@@ -4,11 +4,12 @@ OctoPrint Plugin that intercepts M150 GCode commands and controls local GPIOs ac
 
 Implements the M150 command syntax from the latest Marlin.
 
-        M150: Set Status LED Color - Use R-U-B for R-G-B
+        M150: Set Status LED Color - Use R-U-B for R-G-B Optional (W)
         M150 R255       ; Turn LED red
         M150 R255 U127  ; Turn LED orange (PWM only)
         M150            ; Turn LED off
         M150 R U B      ; Turn LED white
+        M150 W          ; Turn LED white if using RGBW strips (optional)
 
 ## Setup
 

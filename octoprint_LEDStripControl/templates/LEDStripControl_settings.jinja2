@@ -1,8 +1,5 @@
-<h4>{{ _('LED Strip Configuration') }}</h4>
-
-<br />
+<h4>GPIO Configuration</h4>
 <p>GPIO pins should be specified as <a href="http://pinout.xyz">physical pin numbers</a>, not GPIO/BCM numbers.</p>
-<br />
 
 <form class="form-horizontal">
     <div class="control-group">
@@ -27,9 +24,21 @@
     </div>
 
     <div class="control-group">
+        <label class="control-label">White Pin Number (Optional)</label>
+        <div class="controls">
+            <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: settings.plugins.LEDStripControl.w">
+        </div>
+    </div>
+
+    <div class="control-group">
         <label class="checkbox">
             <input type="checkbox" data-bind="checked: settings.plugins.LEDStripControl.pigpiod">Use <a href="http://abyz.co.uk/rpi/pigpio/pigpiod.html">pigpiod</a>
             <span class="help-inline">If unchecked use RPi.GPIO.  PiGPIOd should give smoother PWM frequencies but requires a more involved setup. Please see the <a href="http://abyz.co.uk/rpi/pigpio/pigpiod.html">documentation</a> for details.</span>
+        </label>
+    </div>
+    <div class="control-group">
+        <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settings.plugins.LEDStripControl.on_startup">Turn on LEDs on OctoPrint startup
         </label>
     </div>
 </form>

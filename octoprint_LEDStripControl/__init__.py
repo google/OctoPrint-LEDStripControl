@@ -60,7 +60,7 @@ class PiGPIOpin(object):
 
 	def ChangeDutyCycle(self, dutycycle):
 		self._logger.debug(u"PiGPIOpin: ChangeDutyCycle() pin: %s" % self._pin)
-		self.start(dutycycle)
+		self.start(float(dutycycle))
 
 class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 							octoprint.plugin.SettingsPlugin,
@@ -98,9 +98,12 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 	def _unregister_leds(self):
 		self._logger.debug(u"_unregister_leds()")
 		for i in ('r', 'g', 'b', 'w'):
-			if self._leds[i]:
-				self._leds[i].ChangeDutyCycle(0)
-				self._leds[i].stop()
+			try:
+				if self._leds[i]:
+					self._leds[i].ChangeDutyCycle(0)
+					self._leds[i].stop()
+			except KeyError:
+				pass
 
 		if not self._settings.get_boolean(['pigpiod']) and GPIO:
 			GPIO.cleanup()

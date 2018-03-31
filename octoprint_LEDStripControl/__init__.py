@@ -76,7 +76,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 		self._logger.debug(u"_setup_pin(%s)" % (pin,))
 		if pin:
 			p = None
-			startup = 255 if self._settings.get_boolean(['on_startup']) else 0
+			startup = 255.0 if self._settings.get_boolean(['on_startup']) else 0.0
 
 			if self._pigpiod is None:
 				self._pigpiod = pigpio.pi()
@@ -91,8 +91,8 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 				GPIO.setmode(GPIO.BOARD)
 				GPIO.setup(pin, GPIO.OUT)
 				GPIO.output(pin, GPIO.HIGH)
-				p = GPIO.PWM(pin, startup)
-			p.start(startup)
+				p = GPIO.PWM(pin, float(startup))
+			p.start(float(startup))
 			return p
 
 	def _unregister_leds(self):

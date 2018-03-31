@@ -91,7 +91,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 				GPIO.setmode(GPIO.BOARD)
 				GPIO.setup(pin, GPIO.OUT)
 				GPIO.output(pin, GPIO.HIGH)
-				p = GPIO.PWM(pin, float(startup))
+				p = GPIO.PWM(pin, 100)
 			p.start(float(startup))
 			return p
 

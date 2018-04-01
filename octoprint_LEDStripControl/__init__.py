@@ -51,16 +51,18 @@ class PiGPIOpin(object):
 		self._dutycycle = dutycycle
 		self._logger.debug(u"PiGPIOpin: start() pin: %s" % self._pin)
 		if self._pigpiod.connected:
+			self._pigpiod.set_PWM_range(self._pin, 100) # emulate RPi.GPIO
 			self._pigpiod.set_PWM_dutycycle(self._pin, dutycycle)
 
 	def stop(self):
 		self._logger.debug(u"PiGPIOpin: stop() pin: %s" % self._pin)
 		if self._pigpiod.connected:
+			self._pigpiod.set_PWM_range(self._pin, 100) # emulate RPi.GPIO
 			self._pigpiod.set_PWM_dutycycle(self._pin, 0)
 
 	def ChangeDutyCycle(self, dutycycle):
 		self._logger.debug(u"PiGPIOpin: ChangeDutyCycle() pin: %s" % self._pin)
-		self.start(float(dutycycle))
+		self.start(dutycycle)
 
 class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 							octoprint.plugin.SettingsPlugin,
@@ -76,7 +78,7 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 		self._logger.debug(u"_setup_pin(%s)" % (pin,))
 		if pin:
 			p = None
-			startup = 255.0 if self._settings.get_boolean(['on_startup']) else 0.0
+			startup = 100.0 if self._settings.get_boolean(['on_startup']) else 0.0
 
 			if self._pigpiod is None:
 				self._pigpiod = pigpio.pi()
@@ -92,18 +94,15 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 				GPIO.setup(pin, GPIO.OUT)
 				GPIO.output(pin, GPIO.HIGH)
 				p = GPIO.PWM(pin, 100)
-			p.start(float(startup))
+			p.start(startup)
 			return p
 
 	def _unregister_leds(self):
 		self._logger.debug(u"_unregister_leds()")
 		for i in ('r', 'g', 'b', 'w'):
-			try:
-				if self._leds[i]:
-					self._leds[i].ChangeDutyCycle(0)
-					self._leds[i].stop()
-			except KeyError:
-				pass
+			if self._leds[i]:
+				self._leds[i].ChangeDutyCycle(0)
+				self._leds[i].stop()
 
 		if not self._settings.get_boolean(['pigpiod']) and GPIO:
 			GPIO.cleanup()
@@ -152,12 +151,10 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 
 			return None,
 
-			return None,
-
 	##~~ SettingsPlugin mixin
 
 	def get_settings_version(self):
-		return 1
+		return 2
 
 	def get_template_configs(self):
 		return [
@@ -180,6 +177,13 @@ class LEDStripControlPlugin(octoprint.plugin.AssetPlugin,
 			if data.get(k): data[k] = max(0, int(data[k]))
 		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 		self._register_leds()
+
+	def on_settings_migrate(self, target, current=None):
+		self._logger.debug(u"LEDStripControl on_settings_migrate()")
+		if current == 1:
+			# add the 2 new values included
+			self._settings.set(['w'], self.get_settings_defaults()["w"])
+			self._settings.set(['on_startup'], self.get_settings_defaults()["on_startup"])
 
 	##~~ Softwareupdate hook
 
